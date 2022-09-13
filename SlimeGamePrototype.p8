@@ -11,7 +11,8 @@ function _update()
 	player_update()
 	update_torch()
 	update_block()
- update_real_block()
+    update_real_block()
+    slimeter.update()
 end
 
 function _draw()
@@ -23,6 +24,7 @@ function _draw()
     draw_player()
 	spr(16,-player.x+120,10,2,2) --skeleton
 	--draw_roll()
+    slimeter.draw()
 end	
 
 function debug_log()
@@ -34,7 +36,7 @@ function debug_log()
     print("free: "..tostr(player.state.free))
     print("grounded: "..tostr(player.state.grounded))
     print("boosting: "..tostr(player.state.boosting))
-    print("boost ready: "..tostr(player.boost_ready))
+    print("slimeter: "..tostr(slimeter.level))
 end
 
 -->8
@@ -53,8 +55,8 @@ right=0,
 left=0,
 top=0,
 bottom=0,
-boost_ready=false,
 flipped = false,
+boost_speed = 4,
 state = {free=true, grounded=false, boosting=true}
 }
 
@@ -63,11 +65,11 @@ function player_update()
 	velocities = ("x velocity:"..player.velX.."\ny velocity:"..player.yvel)
 
 --boost
-    if (btnp(❎) and player.state.free and player.boost_ready) then
+    if (btnp(❎) and player.state.free and slimeter.level > 0) then
         player.yvel = 0
         player.velX = 0
         player.state.boosting = true
-        player.boost_ready = false
+        slimeter.level -= 1
     end
         if	(btn(❎) and player.state.boosting) then
 
@@ -76,22 +78,22 @@ function player_update()
             
         --MOVEMENT
             --left
-            if (btn(⬅️) and player.velX>-6) then
+            if (btn(⬅️) and player.velX>-player.boost_speed) then
                 player.velX -= player.x_accel*3 
             end
             
             --right
-            if (btn(➡️) and player.velX<6) then
+            if (btn(➡️) and player.velX<player.boost_speed) then
                 player.velX += player.x_accel*3 
             end
             
             --up
-            if (btn(⬆️) and player.yvel>-6) then
+            if (btn(⬆️) and player.yvel>-player.boost_speed) then
                 player.yvel -= player.x_accel*3
             end
             
             --down
-            if (btn(⬇️) and player.yvel<6) then
+            if (btn(⬇️) and player.yvel<player.boost_speed) then
                 player.yvel += player.x_accel*3
             end
         else
@@ -207,7 +209,7 @@ function pickup()
     torch.alive = false
     torch.unlit_timer = 0
     player.yvel = -8
-    player.boost_ready = true
+    slimeter.level = 3
  else 
  	torch.unlit_timer += 1
  end
@@ -218,7 +220,7 @@ function pickup()
 end
 
 function update_torch()
-torch.x = -player.x+165
+ torch.x = -player.x+165
 	--current sprite
 	pickup()
  if torch.alive == true then
@@ -263,7 +265,7 @@ function collide()
 	if (player.bottom >= block.top) then
 		player.y = block.top-8
         player.state.grounded = true
-        player.boost_ready = true
+        slimeter.level = 3
 	end
 end
 -->8
@@ -299,6 +301,7 @@ function real_collide()
 	if (((player.right >= real_block.left) and (player.right <= real_block.right))or ((player.left <= real_block.right) and (player.left >= real_block.left))) and ((player.bottom >= real_block.top) and player.top <= real_block.bottom) then
 		player.y = real_block.top - 9
         player.state.grounded = true
+        slimeter.level = 3
     end
 end
 -->8
@@ -313,9 +316,17 @@ end
 --slimeter
 
 slimeter = {
-level = 0,
+level = 3,
 sprite = 19,
-length = 3
+length = 3,
+y=0,
+update = function()
+    slimeter.y = 50 - slimeter.level * 8
+end,
+
+draw = function()
+    spr(slimeter.sprite,0,slimeter.y,1,slimeter.level,0,1)
+end
 }
 __gfx__
 00000000000500500000a0000000a0000000a000000000000005500000800000005005000000000000000000000e00000000000000cecc001111111100000000
