@@ -41,6 +41,20 @@ function debug_log()
     print("slimeter: "..tostr(slimeter.level))
 end
 
+function collision(entity1, entity2)
+    if (((entity1.right >= entity2.left) and (entity1.right <= entity2.right))or ((entity1.left <= entity2.right) and (entity1.left >= entity2.left))) and ((entity1.bottom >= entity2.top) and entity1.top <= entity2.bottom) then
+        return true
+    else
+        return false
+    end
+end
+
+function update_edges(entity)
+    entity.right = entity.x + 7
+    entity.left = entity.x
+    entity.top = entity.y
+    entity.bottom = entity.y+7
+end
 -->8
 --player
 player = {
@@ -49,8 +63,8 @@ x=64,
 y=64,
 velX=0,
 yvel=0,
-x_accel=.8,
-x_deccel=.4,
+x_accel=1,
+x_deccel=.5,
 jump_height=4,
 gravity=.5,
 right=0,
@@ -133,17 +147,8 @@ function player_update()
     end
 --velocity adjusts position
     if player.state.free then
-        if player.velX>0 then 
-            player.x += ceil(player.velX) 
-        			player.facing = "right"
-        else 
-        player.x += flr(player.velX) 
-        end
-        if player.yvel>0 then 
-            player.y += ceil(player.yvel) 
-        else 
-        player.y += flr(player.yvel) 
-        end
+        player.x += player.velX
+        player.y += player.yvel
     end
 --update edges
     player.right = 64+7
@@ -170,7 +175,7 @@ function player_update()
     if btn(🅾️) and btn(⬇️) then
     	player.sprite = 26
     elseif btn(🅾️) then
-    player.sprite = 25
+    player.sprite = 25  
     end
 
 --turnaround
@@ -231,10 +236,14 @@ x=100,
 y=70,
 sprite = 2,
 alive = true,
-unlit_timer = 0
+unlit_timer = 0,
+left=0,
+right=0,
+top=0,
+bottom=0
 }
 function pickup()
-	if torch.alive == true and ((torch.x+4 > player.left) and (torch.x+4 < player.right)) and ((torch.y+4 < player.bottom) and (torch.y+4 > player.top)) then
+	if torch.alive == true and collision(player, torch) then
     torch.alive = false
     torch.unlit_timer = 0
     player.yvel = -8
@@ -249,8 +258,9 @@ function pickup()
 end
 
 function update_torch()
- torch.x = -player.x+165
+    torch.x = -player.x+165
 	--current sprite
+    update_edges(torch)
 	pickup()
  if torch.alive == true then
 	 torch.sprite = 2+frame_count/3%3
@@ -278,10 +288,7 @@ bottom=0
 
 function update_block()
 --update edges
- block.right = block.x + 7
- block.left = block.x
- block.top = block.y
- block.bottom = block.y+7
+    update_edges(block)
 --collide
 	collide()
 end
@@ -313,10 +320,7 @@ function update_real_block()
 --update x
 real_block.x = -player.x+64
 --update edges
- real_block.right = real_block.x + 7
- real_block.left = real_block.x
- real_block.top = real_block.y
- real_block.bottom = real_block.y+7
+ update_edges(real_block)
 --collide
  real_collide()
 end
@@ -327,8 +331,8 @@ end
 
 function real_collide()
 
-	if (((player.right >= real_block.left) and (player.right <= real_block.right))or ((player.left <= real_block.right) and (player.left >= real_block.left))) and ((player.bottom >= real_block.top) and player.top <= real_block.bottom) then
-		player.y = real_block.top - 9
+	if collision(player, real_block) then
+		player.y = real_block.top - 7
         player.state.grounded = true
         slimeter.level = 3
     end
@@ -526,7 +530,7 @@ __gff__
 0003020202020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 __map__
-0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e060e0e0e0e0e0e0e3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0e0e0e0e0e0e0e0e0e0e0e0e0e3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
